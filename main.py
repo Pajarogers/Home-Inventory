@@ -3,6 +3,7 @@ import tkinter as tk
 class InventoryLog:
     def __init__(self):
         self.inventory = {}
+        self.product_list = []
 
     def add_product(self, product_name, quantity):
         # Make the product name case-insensitive by converting it to lowercase.
@@ -13,6 +14,7 @@ class InventoryLog:
             self.inventory[product_name]['quantity'] += quantity
         else:
             self.inventory[product_name] = {'quantity': quantity}
+            self.product_list.append(product_name)
             print(f"Added '{product_name}' to the inventory.")
 
     def remove_product(self, product_name, quantity):
@@ -21,6 +23,8 @@ class InventoryLog:
             if self.inventory[product_name]['quantity'] >= quantity:
                 self.inventory[product_name]['quantity'] -= quantity
                 print(f"Removed {quantity} units of '{product_name}' from the inventory.")
+                if self.inventory[product_name]['quantity'] == 0:
+                    self.product_list.remove(product_name)
             else:
                 print(f"Insufficient quantity of '{product_name}' in the inventory.")
         else:
@@ -33,12 +37,14 @@ class InventoryLog:
         else:
             return f"Product '{product_name}' not found in the inventory."
 
+    def sort_products(self):
+        self.product_list.sort()
 
 class InventoryApp:
     def __init__(self, root):
         self.root = root
         self.root.title("P&A Home Inventory Management")
-        self.root.geometry("600x400")  # Set the initial size of the window.
+        self.root.geometry("800x600")  # Set the initial size of the window.
 
         self.inventory_log = InventoryLog()
 
@@ -69,8 +75,16 @@ class InventoryApp:
         self.clear_search_button = tk.Button(root, text="Clear Search", command=self.clear_search, font=("Arial", 16))
         self.clear_search_button.pack()
 
-        self.search_result_label = tk.Label(root, text="", font=("Arial", 16))
+        self.sort_button = tk.Button(root, text="Sort Products", command=self.show_sorted_products, font=("Arial", 16))
+        self.sort_button.pack()
+
+        self.clear_sort_button = tk.Button(root, text="Clear Sort", command=self.clear_sort, font=("Arial", 16))
+        self.clear_sort_button.pack()
+
+        self.search_result_label = tk.Label(root, text="", font=("Arial", 16), wraplength=600, justify='left')
         self.search_result_label.pack()
+
+        self.sorted_window = None
 
     def add_product(self):
         product_name = self.product_name_entry.get().strip()  # Remove leading and trailing spaces
@@ -97,9 +111,27 @@ class InventoryApp:
         self.product_name_entry.delete(0, tk.END)
         self.quantity_entry.delete(0, tk.END)
 
+    def show_sorted_products(self):
+        self.inventory_log.sort_products()
+        sorted_product_list = ', '.join(self.inventory_log.product_list)
+        
+        if self.sorted_window:
+            self.sorted_window.destroy()
+        
+        # Create a new window to display sorted products
+        self.sorted_window = tk.Toplevel(self.root)
+        self.sorted_window.title("Sorted Products")
+        self.sorted_window.geometry("400x400")
+        
+        sorted_product_label = tk.Label(self.sorted_window, text=f"Sorted Products: {sorted_product_list}", font=("Arial", 16))
+        sorted_product_label.pack()
+
+    def clear_sort(self):
+        if self.sorted_window:
+            self.sorted_window.destroy()
+            self.sorted_window = None
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = InventoryApp(root)
     root.mainloop()
-
